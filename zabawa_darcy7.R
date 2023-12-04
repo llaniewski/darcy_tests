@@ -130,14 +130,19 @@ frac$points$fm = 0
 
 
 p = cbind(frac$points$x,frac$points$y,0)
+p = cbind(p[,1],p[,2]-0.5,p[,3])
 triangles = as.vector(t(frac$triangles))
 p = p[triangles,]
 
 sel = p[,1] >= 0.5
 sel = rep(colSums(matrix(sel,3)) == 3,each=3)
 np = p[sel,]
+np = p
 np = cbind(0.5,np[,2],np[,1]-0.5)
 p = rbind(p,np)
+
+a = pi/4
+p = p %*% matrix(c(1,0,0,0,cos(a),sin(a),0,-sin(a),cos(a)), 3,3)
 
 i = factor(sprintf("%3f %3f %3f",p[,1],p[,2],p[,3]))
 i = as.integer(i)
@@ -206,7 +211,7 @@ edge$border = edge$order == 1
 
 flux$zone = as.factor("interior")
 
-sel = vertex$point[,1] == min(vertex$point[,1]) & vertex$point[,2] >= 0.35 & vertex$point[,2] <= 0.65
+sel = vertex$point[,1] == min(vertex$point[,1]) & sqrt(vertex$point[,2]^2+vertex$point[,3]^2) <= 0.15
 sel = sel[edge$i1] & sel[edge$i2]
 flux = rbind(flux,tibble(faceidx=NA, edgeidx=edge$idx[sel], idx=NA, normal=NA, zone="inlet"))
 
@@ -250,7 +255,7 @@ iter = -1
 
 start_iter = iter+1
 X11()
-for (iter in start_iter + 1:1000-1) {
+for (iter in start_iter + 1:15000-1) {
 
   F = phi/pmax(phi_rcp-phi,0.00001)*1
   #F = 0
