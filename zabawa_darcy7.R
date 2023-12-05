@@ -21,14 +21,14 @@ write.vtk.tri = function(points, triangles, point_data=list(), cell_data=list(),
   wt(points[,1:3])
   wl("")
   wl(
-    paste("POLYGONS",nrow(triangles)+1,nrow(triangles)*3),
+    paste("POLYGONS",nrow(triangles)+1L,nrow(triangles)*3L),
     "OFFSETS vtktypeint64"
   )
-  wt((seq_len(nrow(triangles)+1)-1)*3)
+  wt((seq_len(nrow(triangles)+1L)-1L)*3L)
   wl(
     "CONNECTIVITY vtktypeint64"
   )
-  wt(triangles[,1:3]-1)
+  wt(triangles[,1:3]-1L)
   wl("")
   if (length(cell_data) > 0) {
     wl(
@@ -255,7 +255,7 @@ iter = -1
 
 start_iter = iter+1
 X11()
-for (iter in start_iter + 1:15000-1) {
+for (iter in start_iter + 1:100-1) {
 
   F = phi/pmax(phi_rcp-phi,0.00001)*1
   #F = 0
@@ -415,7 +415,7 @@ for (iter in start_iter + 1:15000-1) {
                     dp=dp,
                     Qf=Qf,
                     Qs=Qs
-                  ),filename=sprintf("vtk_output/darcy7_%08d.vtk",iter))
+                  ),filename=sprintf("vtk_output/darcy7b_%08d.vtk",iter))
   }
   toprint = numeric(0)
   for (k in c("inlet","outlet","wall")) {
