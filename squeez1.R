@@ -26,7 +26,7 @@ fun = function(d0) {
       d = deform(p)
       wd = w-d
       wd[sel] = 0
-      print(c(sum(sel),range(wd),range(p)))
+      print(c(mean(sel),range(wd),range(p)))
       nsel = p < 0 | wd < 0
       if (all(sel == nsel)) break
       sel = nsel
@@ -46,16 +46,19 @@ L = 1
 k = expand.grid(k1=seq_circ(n),k2=seq_circ(n))
 kern = 1/sqrt(k$k1^2+k$k2^2)
 kern[1] = 0
+kern = matrix(kern, n, n)
 
 x = seq(0,L,len=n+1)[-(n+1)]
 points = expand.grid( x = x, y = x )
 
-if (FALSE) {
+if (TRUE) {
   froll = 1
   alpha = 4
-  frac = fracture_matrix(dims = c(n,n), power.iso=function(f) 0.0001*ifelse(f<froll, 1,f/froll)^{-alpha},gap=0.1, corr.profile = function(l) 0)
-  f1 = frac$f1
-  f2 = frac$f2
+  frac = fracture_matrix(dims = c(n,n), power.iso=function(f) 0.0001*ifelse(f<froll, 1,f/froll)^{-alpha}, corr.profile = function(l) 0, seed=123)
+  frac_s = sqrt(frac$var.diff)
+  s = 0.2
+  f1 = frac$f1/frac_s*s
+  f2 = frac$f2/frac_s*s
 }
 if (FALSE) {
   f1 = matrix(0,n,n)
@@ -70,7 +73,7 @@ if (FALSE) {
   f2[is.nan(f2)] = 0
 }
 
-if (TRUE) {
+if (FALSE) {
   f1 = matrix(0,n,n)
   f2 = f1
   h = 0.3^2 - (points[,1]-0.5)^2 - (points[,2]-0.5)^2
@@ -159,3 +162,47 @@ for (i in seq_along(ret)) {
 }
 
 
+
+n = 256
+L = 1
+
+k = expand.grid(k1=seq_circ(n),k2=seq_circ(n))
+kern = 1/sqrt(k$k1^2+k$k2^2)
+kern = 1/sqrt(k$k1^2+k$k2^2)^3
+kern[1] = 0
+kern = matrix(kern, n, n)
+
+kern1 = fft(kern, inverse = TRUE)/(n*n)
+
+plot(1:n-1,Re(kern1)[,1],log="")
+abline(2.5,-1)
+abline(1,-2)
+abline(1,-3)
+
+x = (1:n-1)/n
+y = Re(kern1)[,1]
+y = (max(y)-y)/(max(y)-min(y))
+plot(x,y,log="")
+lines(x, (1-x)*x*4,col=2)
+
+y = Re(kern1)
+y = (max(y)-y)/(max(y)-min(y[1,]))
+x = (1:n-1)/n
+x = expand.grid(x,x)
+ny = 4*(x[,1]*(1-x[,1])+x[,2]*(1-x[,2]))
+ny = matrix(ny,n,n)
+range((y-ny))
+plot(y[1,])
+lines(ny[1,])
+
+plot((y-ny)[128,])
+
+plot(as.vector(y)[seq(1,n*n,n+1)])
+abline(0,4/n)
+range(Re(kern1))
+image(y)
+
+
+a = seq(0,2*pi,len=100)
+plot(a,(cos(a)-1)^2+sin(a)^2)
+plot(y[,1])
