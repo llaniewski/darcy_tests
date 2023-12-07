@@ -54,7 +54,7 @@ points = expand.grid( x = x, y = x )
 if (TRUE) {
   froll = 1
   alpha = 4
-  frac = fracture_matrix(dims = c(n,n), power.iso=function(f) 0.0001*ifelse(f<froll, 1,f/froll)^{-alpha}, corr.profile = function(l) 0, seed=123)
+  frac = fracture_matrix(dims = c(n,n), power.iso=function(f) 0.0001*ifelse(f<froll, 1,f/froll)^{-alpha}, corr.profile = function(l) 0, seed=124)
   frac_s = sqrt(frac$var.diff)
   s = 0.2
   f1 = frac$f1/frac_s*s
@@ -93,15 +93,74 @@ d = mean(w) + (min(w)-mean(w))*10^seq(0,-3,len=K)
 ret = lapply(d, fun)
 
 sump = sapply(ret, function(x)x$sump)
-plot(d,sump,log="y")
+vol = -d
+plot(vol,sump,log="x")
+lines(vol, s*log((1.5*(vol/s))^-2+1))
+
+
+plot(vol,sump,log="x")
+# sump = s*log((1.5*(vol/s))^-2+1)
+# s/1.5/sqrt(exp(sump/s) - 1) = vol
+lines(s/(1.5*sqrt(exp(sump/s) - 1)), sump)
+
+
+
 
 perc = sapply(ret, function(x)x$frac)
 plot(d,perc,log="y")
 
 vol = sapply(ret, function(x) mean(x$wd))
-plot(d,vol,log="")
+plot(-d,vol,log="")
+abline(0,1)
 
-plot(vol,sump,log="xy")
+
+plot(log((d-d[1])/(-d)),-log(sump),log="")
+abline(4,-1.2)
+abline(1.5,-0.25)
+
+lnd = seq(-2,7,len=100)
+plot(log((d-d[1])/(-d)),-log(sump),log="")
+lines(lnd, 3.5+lnd*-1.2)
+lines(lnd, 1.5+lnd*-0.25)
+
+lines(lnd, log((exp(3.5)*exp(lnd)^-1 + exp(1.5))*exp(lnd)^-0.25))
+lines(lnd, log((30*exp(lnd)^-1 + 5)*exp(lnd)^-0.25))
+
+plot(-d,1/sump,log="xy")
+#lines(-d, ((-25*d-d[1]*5)/(d-d[1])^1.25)*(-d)^0.25)
+lines(-d, ((25*(-d)^1.25-d[1]*5*(-d)^0.25)/(d-d[1])^1.25))
+
+plot(vol,sump)
+plot(diff(sump)/diff(vol))
+plot(vol,sump,log="x")
+abline(-0.5227,-0.4418)
+
+plot(log10(vol),sump)
+lines(log10(vol), -0.5227-0.4418*log10(vol))
+smax = function(x,y,k) log(exp(x*k)+exp(y*k))/k
+
+#lines(log10(vol), smax(-0.5227-0.4418*log10(vol),0,10))
+
+plot(log10(vol),sump)
+lines(log10(vol), log(0.00536*vol^(-1.9187)+1)/10)
+
+plot(vol,sump)
+lines(vol, 1/10*log(0.00536*vol^(-1.9187)+1))
+
+plot(vol,sump)
+lines(vol, 0.1*log((15.26*vol)^-2+1))
+
+
+
+sel = 10:30
+lm(sump[sel]~log10(vol[sel]))
+
+
+plot(d-d[1],sump,log="xy")
+abline(0,2)
+abline(-0.9,-1/4)
+plot(vol,sump,log="")
+lines(vol,1/(vol^{1/4}*10^{0.9} + (d-d[1])^2))
 
 plot(sump,perc,log="xy",asp=1)
 abline(0,1)
