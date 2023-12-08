@@ -26,11 +26,25 @@ abline(v=o); abline(h=o)
 
 M = sparseMatrix(i=ret$i, j=ret$j, x=ret$x)
 
+draw.mat = function(M) {
+  i = M@i
+  j = rep(seq_len(ncol(M)),diff(M@p))
+  x = M@x
+  plot(j, i, col=colrange(x),pch=16,asp=1,ylim=c(nrow(M),0),xlim=c(0,ncol(M)))
+  rx = seq(min(x),max(x),len=10)
+  legend("topleft", fill=colrange(rx),legend = sprintf("%.3f",rx))
+}
+
+draw.mat(M)
+abline(v=o); abline(h=o)
+
 A = M[(o[1]+1):o[2],(o[3]+1):o[4]]
 B = M[(o[2]+1):o[3],(o[3]+1):o[4]]
 C = M[(o[3]+1):o[4],(o[2]+1):o[3]]
 D = M[(o[3]+1):o[4],(o[1]+1):o[2]]
 
+H = C %*% solve(B %*% C) %*% B
+draw.mat(H)
 
 G = A %*% D - A %*% C %*% solve(B %*% C) %*% B %*% D
 

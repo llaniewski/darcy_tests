@@ -7,6 +7,8 @@ rm(list=ls())
 source("lib.R")
 
 Sys.setenv("PKG_LIBS"="-lsuperlu")
+Sys.setenv("CXX_STD"="CXX17")
+
 Rcpp::sourceCpp("spsolve.cpp")
 
 frac = fracture_geom(refine=6, power.iso=function(face) 0.00001*exp(-(face-1)^2),gap=0.1)
@@ -137,6 +139,7 @@ N = o[length(o)]
 
 only_wall = !any(flux$zone %in% c("inlet","outlet"))
 
+if (FALSE) {
 o3q = data.frame(
   x=c(1/3,0.6,0.2,0.2),
   y=c(1/3,0.2,0.6,0.2),
@@ -158,20 +161,22 @@ for (i in seq_len(nrow(q1))) {
     p1 = q1$x[i]*vertex$point[face$i1,] + q1$y[i]*vertex$point[face$i2,] + q1$z[i]*vertex$point[face$i3,]
     p2 = q2$x[j]*vertex$point[face$i1,] + q2$y[j]*vertex$point[face$i2,] + q2$z[j]*vertex$point[face$i3,]
     fdist = fields::rdist(p1,p2)
-    M = M + q1$w[i]*q2$w[j]*1/fdist
+    M = M + q1$w[i]*q2$w[j]*1/fdist^3
   }
 }
 
 M = (M + t(M))/2
 
+#M2 = solve(M)
+
 write.vtk.tri(vertex$point, face, 
               cell_data=list(
                 v1 = M %*% face$area,
-                v2 = M[,2],
-                v3 = M[,3],
-                v4 = M[,4]
+                v2 = M2 %*% face$area,
+                v3 = M[,2000],
+                v4 = M2[,2000]
               ),filename="lap.vtk")
-
+}
 
 iter = -1
 
@@ -205,13 +210,15 @@ for (iter in start_iter + 1:100-1) {
 
   RHS = rep(0,N)
   
-  RHS[o[2]+face$idx] = rho_m * face$area
+  RHS[o[1]+face$idx] = h * face$area
+  RHS[o[2]+face$idx] = h * rho_m * face$area
   RHS[o[5]+flux$idx] = flux_g_vol
   RHS[o[6]+flux$idx] = flux_g_mass
 
   ret = list(
     list( i=o[1]+flux$faceidx, j=o[5]+flux$idx,      x=edge$len[flux$edgeidx]*dt   ),
     list( i=o[1]+face$idx,     j=o[7]+face$idx,      x=1*face$area*dt ),
+    list( i=o[2]+face$idx,     j=o[8]+face$idx,      x=face$area ),
     list( i=o[2]+face$idx,     j=o[2]+face$idx,      x=face$area ),
     list( i=o[2]+flux$faceidx, j=o[6]+flux$idx,      x=edge$len[flux$edgeidx]*dt ),
     list( i=o[2]+face$idx,     j=o[7]+face$idx,      x=1*face$area*dt ),
@@ -226,7 +233,9 @@ for (iter in start_iter + 1:100-1) {
     list( i=o[6]+flux$idx,     j=o[4]+flux$edgeidx,  x=-flux_trans_mas_diff ),
     list( i=o[6]+flux$idx,     j=o[6]+flux$idx,      x=1 ),
     list( i=o[7]+face$idx,     j=o[1]+face$idx,      x=-leakoff_coef),
-    list( i=o[7]+face$idx,     j=o[7]+face$idx,      x=1)
+    list( i=o[7]+face$idx,     j=o[7]+face$idx,      x=1),
+    list( i=o[8]+face$idx,     j=o[8]+face$idx,      x=1 ),
+    list( i=o[9]+face$idx,     j=o[9]+face$idx,      x=1 )
   )
 
   RHS[o[7]+face$idx] = - leakoff_coef * background_pressure(face$center)
